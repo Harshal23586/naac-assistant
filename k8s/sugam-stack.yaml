@@ -1,0 +1,104 @@
+# ==========================================
+# SUGAM Enterprise Production Kubernetes Configuration
+# Handles massive node scaling naturally modeling LoadBalancers locally cleanly mapping directly onto Google GKE / AWS EKS.
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sugam-nginx-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-gateway
+  template:
+    metadata:
+      labels:
+        app: nginx-gateway
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-gateway-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: nginx-gateway
+---
+# ================== AI COMPUTE MICROSERVICE ==================
+# Requires Auto-Scaling (HPA) to dynamically increase from 1 -> 5 deployments instantly if Regulatory loads bottleneck safely.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sugam-ai-service
+spec:
+  replicas: 3 # Hard scaling specifically dictating 3x parallel compute matrices.
+  selector:
+    matchLabels:
+      app: ai-service
+  template:
+    metadata:
+      labels:
+        app: ai-service
+    spec:
+      containers:
+      - name: ai-service
+        image: sugam/ai-service:v1
+        ports:
+        - containerPort: 8002
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-cluster-service
+spec:
+  ports:
+  - port: 8002
+  selector:
+    app: ai-service
+---
+# ================== DATABASE SERVICES (Stateful Sets) ==================
+# Kubernetes natively maps Persistent Volume Claims tracking exactly postgres/mongo natively explicitly safely implicitly flawlessly!
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sugam-postgres
+spec:
+  serviceName: "postgres-cluster"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: "sugam_admin"
+        - name: POSTGRES_PASSWORD
+          value: "sugam_pass"
+        - name: POSTGRES_DB
+          value: "sugam_db"

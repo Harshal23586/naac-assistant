@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  gateway:
+    image: nginx:alpine
+    container_name: sugam_gateway
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - frontend
+
+  document_service:
+    build:
+      context: ./document_service
+    container_name: sugam_document_service
+    env_file: .env
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./document_service/uploads:/app/uploads
+    depends_on:
+      - mongo
+      
+  ai_service:
+    build:
+      context: ./ai_service
+    container_name: sugam_ai_service
+    env_file: .env
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./models:/models
+      - ./ai_service/model_cache:/app/model_cache
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: sugam_postgres
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:latest
+    container_name: sugam_mongo
+    env_file: .env
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+  institution_service:
+    build:
+      context: ./institution_service
+    container_name: sugam_institution_service
+    env_file: .env
+    ports:
+      - "8003:8003"
+    depends_on:
+      - postgres
+
+  analytics_service:
+    build:
+      context: ./analytics_service
+    container_name: sugam_analytics_service
+    env_file: .env
+    ports:
+      - "8004:8004"
+
+  workflow_service:
+    build:
+      context: ./workflow_service
+    container_name: sugam_workflow_service
+    env_file: .env
+    ports:
+      - "8005:8005"
+    depends_on:
+      - postgres
+
+  backend:
+    build: 
+      context: ./backend
+    container_name: sugam_backend
+    env_file: .env
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: sugam_frontend
+    env_file: .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  mongodata:
