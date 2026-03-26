@@ -1,0 +1,41 @@
+﻿# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data (keep structure only)
+data/*.db
+data/uploads/*.*
+!data/uploads/.gitkeep
+data/institutions/*.json
+!data/institutions/.gitkeep
+data/applications/*.json
+!data/applications/.gitkeep
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Ngrok
+ngrok.exe
+
+# OS
+.DS_Store
+Thumbs.db

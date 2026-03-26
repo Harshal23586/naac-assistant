@@ -1,32 +1,42 @@
-﻿# Database Module for NAAC Accreditation Assistant
+﻿# Enhanced Database Module for NAAC Accreditation Assistant
 import sqlite3
 import json
-from datetime import datetime
 import os
+import shutil
+from datetime import datetime
 import threading
+import hashlib
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'naac_data.db')
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'uploads')
 
-# Thread-local storage
 _local = threading.local()
 
 class NAACDatabase:
     def __init__(self):
-        self._ensure_db_dir()
+        self._ensure_dirs()
+        self._connection = None
+    
+    def _ensure_dirs(self):
+        """Ensure all required directories exist"""
+        data_dir = os.path.dirname(DB_PATH)
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+        if not os.path.exists(UPLOAD_DIR):
+            os.makedirs(UPLOAD_DIR)
     
     def _get_connection(self):
+        """Get thread-specific database connection"""
         if not hasattr(_local, 'connection') or _local.connection is None:
             _local.connection = sqlite3.connect(DB_PATH, check_same_thread=False)
+            _local.connection.row_factory = sqlite3.Row
             _local.cursor = _local.connection.cursor()
             self._create_tables(_local.connection, _local.cursor)
         return _local.connection, _local.cursor
     
-    def _ensure_db_dir(self):
-        data_dir = os.path.dirname(DB_PATH)
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-    
     def _create_tables(self, conn, cursor):
+        """Create all necessary tables"""
+        
         # Institutions table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS institutions (
@@ -58,6 +68,7 @@ class NAACDatabase:
                 total_score REAL,
                 binary_status TEXT,
                 maturity_level INTEGER,
+                completion_percentage REAL,
                 FOREIGN KEY (institution_id) REFERENCES institutions (id)
             )
         ''')
@@ -73,149 +84,257 @@ class NAACDatabase:
                 auto_score REAL,
                 user_score REAL,
                 validated BOOLEAN DEFAULT 0,
+                validation_notes TEXT,
                 updated_at TIMESTAMP,
                 FOREIGN KEY (application_id) REFERENCES naac_applications (id),
                 UNIQUE(application_id, metric_code)
             )
         ''')
         
+        # Documents metadata table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                application_id INTEGER,
+                metric_code TEXT,
+                document_name TEXT,
+                original_filename TEXT,
+                file_path TEXT,
+                file_size INTEGER,
+                file_type TEXT,
+                uploaded_at TIMESTAMP,
+                FOREIGN KEY (application_id) REFERENCES naac_applications (id)
+            )
+        ''')
+        
+        # Backup/Restore table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS backups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                institution_id INTEGER,
+                backup_file TEXT,
+                backup_date TIMESTAMP,
+                description TEXT
+            )
+        ''')
+        
         conn.commit()
     
-    def save_institution(self, profile_data):
+    def save_document(self, application_id, metric_code, file, original_filename):
+        """Save uploaded document and return file info"""
         conn, cursor = self._get_connection()
         
-        cursor.execute("SELECT id FROM institutions WHERE aishe_code = ?", (profile_data.get('aishe_code'),))
-        existing = cursor.fetchone()
+        # Create upload directory for this application and metric
+        metric_dir = os.path.join(UPLOAD_DIR, str(application_id), metric_code)
+        os.makedirs(metric_dir, exist_ok=True)
         
-        now = datetime.now()
+        # Generate unique filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_filename = f"{timestamp}_{original_filename}"
+        file_path = os.path.join(metric_dir, safe_filename)
         
-        if existing:
-            cursor.execute('''
-                UPDATE institutions SET
-                    institution_name = ?, institution_type = ?,
-                    orientation_category = ?, legacy_category = ?,
-                    address = ?, city = ?, state = ?, pin = ?, website = ?,
-                    updated_at = ?
-                WHERE aishe_code = ?
-            ''', (
-                profile_data.get('name'), profile_data.get('type'),
-                profile_data.get('orientation_category'), profile_data.get('legacy_category'),
-                profile_data.get('address'), profile_data.get('city'),
-                profile_data.get('state'), profile_data.get('pin'),
-                profile_data.get('website'), now,
-                profile_data.get('aishe_code')
-            ))
-            institution_id = existing[0]
-        else:
-            cursor.execute('''
-                INSERT INTO institutions (
-                    institution_name, aishe_code, institution_type,
-                    orientation_category, legacy_category, address, city,
-                    state, pin, website, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                profile_data.get('name'), profile_data.get('aishe_code'),
-                profile_data.get('type'), profile_data.get('orientation_category'),
-                profile_data.get('legacy_category'), profile_data.get('address'),
-                profile_data.get('city'), profile_data.get('state'),
-                profile_data.get('pin'), profile_data.get('website'),
-                now, now
-            ))
-            institution_id = cursor.lastrowid
+        # Save file
+        with open(file_path, "wb") as f:
+            f.write(file.getbuffer())
         
-        conn.commit()
-        return institution_id
-    
-    def get_institution(self, aishe_code):
-        conn, cursor = self._get_connection()
-        cursor.execute("SELECT * FROM institutions WHERE aishe_code = ?", (aishe_code,))
-        row = cursor.fetchone()
-        if row:
-            columns = [desc[0] for desc in cursor.description]
-            return dict(zip(columns, row))
-        return None
-    
-    def create_application(self, institution_id, cycle=1):
-        conn, cursor = self._get_connection()
-        now = datetime.now()
+        # Get file size
+        file_size = os.path.getsize(file_path)
+        
+        # Get file extension
+        file_ext = os.path.splitext(original_filename)[1].lower()
+        
+        # Save to database
         cursor.execute('''
-            INSERT INTO naac_applications (institution_id, cycle, status, created_at)
-            VALUES (?, ?, ?, ?)
-        ''', (institution_id, cycle, 'draft', now))
-        
-        application_id = cursor.lastrowid
-        conn.commit()
-        return application_id
-    
-    def get_active_application(self, institution_id):
-        conn, cursor = self._get_connection()
-        cursor.execute('''
-            SELECT * FROM naac_applications
-            WHERE institution_id = ?
-            ORDER BY created_at DESC LIMIT 1
-        ''', (institution_id,))
-        row = cursor.fetchone()
-        
-        if row:
-            columns = [desc[0] for desc in cursor.description]
-            return dict(zip(columns, row))
-        return None
-    
-    def save_metric_response(self, application_id, metric_code, response_data):
-        conn, cursor = self._get_connection()
-        now = datetime.now()
-        
-        # Convert response to JSON string if it's a dict
-        if isinstance(response_data.get('response'), dict):
-            response_json = json.dumps(response_data.get('response'))
-        else:
-            response_json = response_data.get('response', '')
-        
-        documents_json = json.dumps(response_data.get('documents', []))
-        
-        cursor.execute('''
-            INSERT OR REPLACE INTO metric_responses (
-                application_id, metric_code, response, documents,
-                auto_score, validated, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO documents (
+                application_id, metric_code, document_name, original_filename,
+                file_path, file_size, file_type, uploaded_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            application_id, metric_code, response_json,
-            documents_json, response_data.get('auto_score'),
-            response_data.get('validated', False), now
+            application_id, metric_code, safe_filename, original_filename,
+            file_path, file_size, file_ext, datetime.now()
         ))
         
+        doc_id = cursor.lastrowid
         conn.commit()
+        
+        return {
+            'id': doc_id,
+            'filename': safe_filename,
+            'original': original_filename,
+            'path': file_path,
+            'size': file_size
+        }
     
-    def get_metric_responses(self, application_id):
+    def get_documents(self, application_id, metric_code):
+        """Get all documents for a metric"""
         conn, cursor = self._get_connection()
-        cursor.execute("SELECT * FROM metric_responses WHERE application_id = ?", (application_id,))
+        cursor.execute('''
+            SELECT * FROM documents
+            WHERE application_id = ? AND metric_code = ?
+            ORDER BY uploaded_at DESC
+        ''', (application_id, metric_code))
+        
         rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    
+    def delete_document(self, doc_id):
+        """Delete a document from disk and database"""
+        conn, cursor = self._get_connection()
         
-        columns = [desc[0] for desc in cursor.description]
-        responses = {}
+        # Get file path first
+        cursor.execute("SELECT file_path FROM documents WHERE id = ?", (doc_id,))
+        row = cursor.fetchone()
         
-        for row in rows:
-            data = dict(zip(columns, row))
-            metric_code = data['metric_code']
+        if row:
+            # Delete from disk
+            file_path = row['file_path']
+            if os.path.exists(file_path):
+                os.remove(file_path)
             
-            try:
-                response_data = json.loads(data['response']) if data['response'] else {}
-            except:
-                response_data = data['response']
-            
-            try:
-                documents = json.loads(data['documents']) if data['documents'] else []
-            except:
-                documents = []
-            
-            responses[metric_code] = {
-                'response': response_data,
-                'documents': documents,
-                'auto_score': data['auto_score'],
-                'validated': data['validated']
-            }
+            # Delete from database
+            cursor.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
+            conn.commit()
+            return True
         
-        return responses
+        return False
+    
+    def export_institution_data(self, institution_id):
+        """Export all data for an institution as JSON"""
+        conn, cursor = self._get_connection()
+        
+        # Get institution details
+        cursor.execute("SELECT * FROM institutions WHERE id = ?", (institution_id,))
+        institution = dict(cursor.fetchone())
+        
+        # Get applications
+        cursor.execute("SELECT * FROM naac_applications WHERE institution_id = ?", (institution_id,))
+        applications = [dict(row) for row in cursor.fetchall()]
+        
+        # Get responses for each application
+        for app in applications:
+            cursor.execute("SELECT * FROM metric_responses WHERE application_id = ?", (app['id'],))
+            responses = [dict(row) for row in cursor.fetchall()]
+            
+            # Parse JSON responses
+            for resp in responses:
+                if resp['response']:
+                    try:
+                        resp['response'] = json.loads(resp['response'])
+                    except:
+                        pass
+                if resp['documents']:
+                    try:
+                        resp['documents'] = json.loads(resp['documents'])
+                    except:
+                        pass
+            
+            app['responses'] = responses
+            
+            # Get documents
+            cursor.execute("SELECT * FROM documents WHERE application_id = ?", (app['id'],))
+            app['documents'] = [dict(row) for row in cursor.fetchall()]
+        
+        export_data = {
+            'institution': institution,
+            'applications': applications,
+            'export_date': datetime.now().isoformat(),
+            'version': '1.0'
+        }
+        
+        return export_data
+    
+    def import_institution_data(self, export_data):
+        """Import previously exported data"""
+        conn, cursor = self._get_connection()
+        
+        # Check if institution exists
+        aishe_code = export_data['institution']['aishe_code']
+        cursor.execute("SELECT id FROM institutions WHERE aishe_code = ?", (aishe_code,))
+        existing = cursor.fetchone()
+        
+        if existing:
+            return {'success': False, 'error': 'Institution already exists'}
+        
+        # Insert institution
+        institution = export_data['institution']
+        del institution['id']
+        del institution['created_at']
+        del institution['updated_at']
+        
+        columns = ', '.join(institution.keys())
+        placeholders = ', '.join(['?'] * len(institution))
+        
+        cursor.execute(f'''
+            INSERT INTO institutions ({columns}, created_at, updated_at)
+            VALUES ({placeholders}, ?, ?)
+        ''', list(institution.values()) + [datetime.now(), datetime.now()])
+        
+        institution_id = cursor.lastrowid
+        
+        # Insert applications and their data
+        for app in export_data['applications']:
+            # Insert application
+            app_data = {k: v for k, v in app.items() if k not in ['id', 'responses', 'documents', 'created_at', 'submitted_at']}
+            app_data['institution_id'] = institution_id
+            
+            columns = ', '.join(app_data.keys())
+            placeholders = ', '.join(['?'] * len(app_data))
+            
+            cursor.execute(f'''
+                INSERT INTO naac_applications ({columns}, created_at)
+                VALUES ({placeholders}, ?)
+            ''', list(app_data.values()) + [datetime.now()])
+            
+            application_id = cursor.lastrowid
+            
+            # Insert responses
+            for resp in app.get('responses', []):
+                resp_data = {k: v for k, v in resp.items() if k not in ['id']}
+                resp_data['application_id'] = application_id
+                
+                # Convert response to JSON if dict
+                if isinstance(resp_data.get('response'), dict):
+                    resp_data['response'] = json.dumps(resp_data['response'])
+                if isinstance(resp_data.get('documents'), (list, dict)):
+                    resp_data['documents'] = json.dumps(resp_data['documents'])
+                
+                columns = ', '.join(resp_data.keys())
+                placeholders = ', '.join(['?'] * len(resp_data))
+                
+                cursor.execute(f'INSERT INTO metric_responses ({columns}) VALUES ({placeholders})', list(resp_data.values()))
+        
+        conn.commit()
+        return {'success': True, 'institution_id': institution_id}
+    
+    def get_institution_stats(self, institution_id):
+        """Get statistics for an institution"""
+        conn, cursor = self._get_connection()
+        
+        # Get all applications
+        cursor.execute('''
+            SELECT a.*, 
+                   (SELECT COUNT(*) FROM metric_responses WHERE application_id = a.id) as total_responses,
+                   (SELECT COUNT(*) FROM metric_responses WHERE application_id = a.id AND response != '' AND response IS NOT NULL) as completed_responses
+            FROM naac_applications a
+            WHERE a.institution_id = ?
+            ORDER BY a.created_at DESC
+        ''', (institution_id,))
+        
+        applications = [dict(row) for row in cursor.fetchall()]
+        
+        # Get total metrics count
+        from config.naac_config import METRICS
+        total_metrics = len(METRICS)
+        
+        for app in applications:
+            app['completion_rate'] = (app['completed_responses'] / total_metrics * 100) if total_metrics > 0 else 0
+        
+        return {
+            'total_applications': len(applications),
+            'applications': applications,
+            'latest_completion': applications[0]['completion_rate'] if applications else 0,
+            'latest_status': applications[0]['status'] if applications else None
+        }
 
 # Helper function
 _db_instance = None
