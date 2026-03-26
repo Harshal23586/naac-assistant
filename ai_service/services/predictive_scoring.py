@@ -43,3 +43,4 @@ class DecisionTreeInferenceService:
             'confidence': float(max(probabilities)),
             'probabilities': {str(k): float(v) for k, v in zip(self.label_encoder.classes_, probabilities)}
         }
+

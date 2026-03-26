@@ -8,11 +8,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from core.analyzer import InstitutionalAIAnalyzer
 from institution.auth import create_institution_login
 
-st.set_page_config(
-    page_title="SUGAM Portal Login", 
-    layout="wide",
-)
-
 # Initialize session state for users if not present
 if 'institution_user' not in st.session_state:
     st.session_state.institution_user = None
@@ -55,3 +50,4 @@ except Exception as e:
 
 st.markdown("---")
 st.caption("✨ AES-256 Government Grade Encryption Active")
+

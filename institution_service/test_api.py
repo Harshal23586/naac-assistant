@@ -45,3 +45,4 @@ def test_institution_profiles():
 
 if __name__ == "__main__":
     test_institution_profiles()
+

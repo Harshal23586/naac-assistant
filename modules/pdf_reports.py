@@ -884,3 +884,4 @@ def create_pdf_report_module(analyzer):
                         file_name=f"institutional_reports_{datetime.now().strftime('%Y%m%d')}.zip",
                         mime="application/zip"
                     )
+

@@ -6,15 +6,11 @@ import streamlit as st
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from core.analyzer import InstitutionalAIAnalyzer
-from modules.pdf_reports import create_pdf_report_module
-
-st.set_page_config(
-    page_title="SUGAM Report Generation", 
-    layout="wide"
-)
+from modules.data_management import create_data_management_module
 
 try:
     analyzer = InstitutionalAIAnalyzer()
-    create_pdf_report_module(analyzer)
+    create_data_management_module(analyzer)
 except Exception as e:
-    st.error(f"Error initializing Report Generation: {str(e)}")
+    st.error(f"Error initializing Data Management: {str(e)}")
+

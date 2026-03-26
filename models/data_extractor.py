@@ -378,3 +378,4 @@ class RAGDataExtractor:
             'confidence_score': 0.0,
             'status': 'Analysis Completed in Basic Mode'
         }
+

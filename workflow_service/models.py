@@ -23,3 +23,4 @@ class ReviewerAssignment(Base):
     role = Column(String, nullable=False)
 
     pipeline = relationship("ApprovalPipeline", back_populates="assignments")
+

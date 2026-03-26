@@ -106,3 +106,4 @@ def assess_risk_level(performance_score):
         return "High Risk"
     else:
         return "Critical Risk"
+

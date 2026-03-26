@@ -47,3 +47,4 @@ class RBACAuth:
 require_admin = RBACAuth.require_roles(["SUPER_ADMIN"])
 require_reviewer = RBACAuth.require_roles(["SUPER_ADMIN", "REVIEWER"])
 require_standard = RBACAuth.require_roles(["SUPER_ADMIN", "REVIEWER", "INSTITUTION_USER"])
+

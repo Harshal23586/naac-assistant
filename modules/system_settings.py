@@ -412,3 +412,4 @@ def validate_system_integrity(analyzer):
             st.write(f"- {issue}")
     else:
         st.success("✅ System integrity validation passed!")
+

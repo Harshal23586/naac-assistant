@@ -24,3 +24,4 @@ def get_db():
     except Exception as e:
         logging.error(f"Failed NoSQL Connection to MongoDB: {e}")
         return None
+

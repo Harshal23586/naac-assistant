@@ -6,15 +6,11 @@ import streamlit as st
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from core.analyzer import InstitutionalAIAnalyzer
-from modules.system_settings import create_system_settings
-
-st.set_page_config(
-    page_title="SUGAM System Settings", 
-    layout="wide"
-)
+from modules.document_analysis import create_document_analysis_module
 
 try:
     analyzer = InstitutionalAIAnalyzer()
-    create_system_settings(analyzer)
+    create_document_analysis_module(analyzer)
 except Exception as e:
-    st.error(f"Error initializing System Settings: {str(e)}")
+    st.error(f"Error initializing Document Analysis: {str(e)}")
+

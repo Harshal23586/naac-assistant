@@ -218,3 +218,4 @@ def create_notification_settings():
                 "email_notifications": email_notifications,
                 "frequency": frequency
             }
+

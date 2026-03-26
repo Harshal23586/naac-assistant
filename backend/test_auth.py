@@ -49,3 +49,4 @@ if __name__ == "__main__":
     test_missing_token()
     test_successful_login_and_predict()
     print("🔐 All Authentication mechanisms verified securely.")
+

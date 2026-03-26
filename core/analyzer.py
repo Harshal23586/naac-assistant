@@ -433,3 +433,4 @@ class InstitutionalAIAnalyzer:
             recommendations.append("📊 Submit supporting documents for comprehensive assessment")
         
         return recommendations
+

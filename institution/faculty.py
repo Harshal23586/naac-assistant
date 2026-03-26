@@ -610,3 +610,4 @@ def download_faculty_report(faculty_data: List[Dict], user: Dict):
         file_name=f"faculty_report_{user.get('institution_id')}_{datetime.now().strftime('%Y%m%d')}.json",
         mime="application/json"
     )
+

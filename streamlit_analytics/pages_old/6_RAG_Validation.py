@@ -13,11 +13,6 @@ except ImportError:
     # Fallback if not in rag_core
     from modules.rag_dashboard import create_rag_validation_dashboard
 
-st.set_page_config(
-    page_title="SUGAM RAG Validation", 
-    layout="wide"
-)
-
 try:
     analyzer = InstitutionalAIAnalyzer()
     
@@ -31,3 +26,4 @@ try:
         
 except Exception as e:
     st.error(f"Error initializing RAG Validation: {str(e)}")
+

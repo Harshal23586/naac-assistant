@@ -45,3 +45,4 @@ def get_peer_benchmarks(institution_type: str = "Public") -> Dict[str, Any]:
             "top_percentile_cutoff_score": 8.5
         }
     }
+

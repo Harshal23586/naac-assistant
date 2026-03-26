@@ -55,3 +55,4 @@ class DecisionTreeInferenceService:
         }
 
 inference_service = DecisionTreeInferenceService()
+

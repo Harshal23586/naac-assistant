@@ -15,3 +15,4 @@ def assess_risk_level(performance_score: float) -> str:
     """Assess institutional risk level"""
     # ... (move this function here)
     pass
+

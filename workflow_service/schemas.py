@@ -26,3 +26,4 @@ class ApprovalPipeline(PipelineCreate):
     assignments: List[ReviewerAssignment] = []
     class Config:
         from_attributes = True
+

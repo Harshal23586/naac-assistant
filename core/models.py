@@ -7,3 +7,4 @@ class BaseModel:
 
     def predict(self, x):
         return "Not Implemented"
+

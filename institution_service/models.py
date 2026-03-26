@@ -34,3 +34,4 @@ class HistoricalEvaluation(Base):
     ai_risk_score = Column(Float)
 
     institution = relationship("InstitutionProfile", back_populates="history")
+

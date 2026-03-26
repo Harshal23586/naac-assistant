@@ -28,3 +28,4 @@ test_file = DummyFile("Curriculum_Framework_2023.txt", content)
 res = analyzer.verify_document_authenticity([test_file])
 
 print("VERIFICATION RESULT:", res)
+

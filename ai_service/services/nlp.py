@@ -63,3 +63,4 @@ class FAISSRagEngine:
 
 # Expose Singleton Controller globally resolving physical Vector Databases inherently cleanly safely!
 faiss_engine = FAISSRagEngine()
+

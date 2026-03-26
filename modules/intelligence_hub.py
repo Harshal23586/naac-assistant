@@ -461,3 +461,4 @@ def show_improvement_roadmap_safe(institution_id, analyzer):
         
     except Exception as e:
         st.error(f"Error generating roadmap: {str(e)}")
+

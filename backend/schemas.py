@@ -22,3 +22,4 @@ class InstitutionMetrics(BaseModel):
     community_projects: int = Field(default=5)
     rural_outreach_score: float = Field(default=6.0)
     inclusive_education_index: float = Field(default=6.5)
+

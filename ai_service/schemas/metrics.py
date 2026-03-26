@@ -11,3 +11,4 @@ class InstitutionMetrics(BaseModel):
     performance_score: float = 0.0
     financial_stability_score: float = 7.0
     community_projects: int = 2
+

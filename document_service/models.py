@@ -11,3 +11,4 @@ class DocumentRecord(Base):
     content_type = Column(String, nullable=False)
     extracted_text = Column(Text, nullable=True)
     uploaded_at = Column(DateTime, default=datetime.datetime.utcnow)
+

@@ -574,3 +574,4 @@ def generate_data_summary(data):
             file_name=filename,
             mime="text/csv"
         )
+

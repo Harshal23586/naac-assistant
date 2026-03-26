@@ -474,3 +474,4 @@ def _system_configuration_tab(analyzer):
             'enable_compliance_checking': compliance_checking
         }
         st.success("✅ Configuration saved!")
+

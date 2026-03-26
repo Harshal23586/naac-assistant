@@ -54,3 +54,4 @@ def get_user_info():
 def set_active_tab(tab_name):
     """Set active tab for navigation"""
     st.session_state.active_tab = tab_name
+

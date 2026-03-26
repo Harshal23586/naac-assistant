@@ -1160,3 +1160,4 @@ def create_decision_tree_module(analyzer):
                 st.write(f"**Leaves:** {model_info.get('n_leaves', 'N/A')}")
                 st.write(f"**Accuracy:** {model_info['test_accuracy']:.1%}")
                 st.write(f"**Training Runs:** {model_info['training_history_count']}")
+

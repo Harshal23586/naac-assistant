@@ -68,3 +68,4 @@ class NERExtractor:
             }
 
 intelligent_extractor = NERExtractor()
+

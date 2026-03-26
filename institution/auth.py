@@ -344,7 +344,7 @@ if __name__ == "__main__":
     
     from core.analyzer import InstitutionalAIAnalyzer
     
-    st.set_page_config(page_title="Institution Auth Test", layout="wide")
-    analyzer = InstitutionalAIAnalyzer()
+        analyzer = InstitutionalAIAnalyzer()
     create_institution_login(analyzer)
+
 

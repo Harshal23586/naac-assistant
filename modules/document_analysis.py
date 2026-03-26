@@ -470,3 +470,4 @@ def get_document_requirements_by_parameters(approval_type):
     }
     
     return base_requirements.get(approval_type, base_requirements["new_approval"])
+

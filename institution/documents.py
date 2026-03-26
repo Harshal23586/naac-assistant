@@ -440,9 +440,7 @@ if __name__ == "__main__":
     
     from core.analyzer import InstitutionalAIAnalyzer
     
-    st.set_page_config(page_title="Document Upload Test", layout="wide")
-    
-    dummy_user = {
+        dummy_user = {
         'institution_id': 'INST_0001',
         'institution_name': 'Test University',
         'contact_person': 'Dr. Test User',
@@ -452,3 +450,4 @@ if __name__ == "__main__":
     
     analyzer = InstitutionalAIAnalyzer()
     create_institution_document_upload(analyzer, dummy_user)
+

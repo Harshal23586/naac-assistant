@@ -887,3 +887,4 @@ def create_rag_validation_dashboard(analyzer):
         with st.spinner("🤖 Extracting data from documents..."):
             # Extract data from documents
             document_data = validator.extract_document_data(uploaded_files)
+

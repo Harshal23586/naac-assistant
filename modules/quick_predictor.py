@@ -138,3 +138,4 @@ def create_quick_predictor(analyzer):
                     'Probability': list(prediction['probabilities'].values())
                 })
                 st.dataframe(prob_df.style.format({'Probability': '{:.2%}'}))
+

@@ -287,3 +287,4 @@ def create_institution_approval_workflow(analyzer, user):
         - Phone: 011-87654321
         - Live Chat: Available on portal
         """)
+

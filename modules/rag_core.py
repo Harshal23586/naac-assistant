@@ -1036,3 +1036,4 @@ def export_validation_results(report):
 # elif app_mode == "🔍 Document-Form Validation":
 #     create_rag_validation_dashboard(analyzer)
 __all__ = ['DocumentFormValidator', 'InstitutionalRAGSystem', 'create_rag_validation_dashboard']
+

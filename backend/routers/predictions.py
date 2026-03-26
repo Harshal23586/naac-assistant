@@ -29,3 +29,4 @@ def predict_institutional_risk(metrics: InstitutionMetrics, current_user: str = 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+

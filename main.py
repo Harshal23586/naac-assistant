@@ -2,13 +2,6 @@
 import streamlit as st
 
 # Page configuration
-st.set_page_config(
-    page_title="SUGAM - Smart Unified Governance and Approval Management",
-    page_icon="assets/logo.jpg",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 import sys
 import os
 from datetime import datetime
@@ -1083,6 +1076,7 @@ def show_main_application(analyzer):
 
 if __name__ == "__main__":
     main()
+
 
 
 

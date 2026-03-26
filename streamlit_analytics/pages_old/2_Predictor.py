@@ -6,18 +6,13 @@ import requests
 # Embed Core Paths explicitly securing physical modules flawlessly seamlessly natively mathematically appropriately cleanly
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-st.set_page_config(
-    page_title="SUGAM ML Predictor", 
-    layout="wide",
-)
-
 st.title("🔬 Application Metrics & Prediction Simulator")
 st.markdown("Adjust parameters to simulate live ML predictions. Streams real-time insights from the FastAPI microservice.")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    with st.container(border=True):
+    with st.container():
         st.subheader("Institution Parameters")
         sfr = st.number_input("Student-Faculty Ratio", value=15.0, step=0.1)
         score = st.number_input("Performance Score (0-10)", value=6.5, step=0.1)
@@ -90,3 +85,5 @@ with col2:
                 st.exception(e)
     else:
         st.info("Awaiting Inference Data. Modify metrics and click predict.")
+
+

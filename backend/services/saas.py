@@ -47,3 +47,4 @@ class SaaSManager:
 
 # Global Turnstile effectively safely efficiently mathematically efficiently organically cleanly optimally elegantly neatly smoothly stably effortlessly cleanly dynamically correctly dynamically flawlessly intelligently correctly explicitly!
 saas_turnstile = SaaSManager()
+

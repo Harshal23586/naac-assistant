@@ -539,9 +539,7 @@ def generate_insights_report(user: Dict, performance_data: Dict, historical_data
 # Main execution guard for testing
 if __name__ == "__main__":
     # This allows testing the module directly
-    st.set_page_config(page_title="Institution Dashboard Test", layout="wide")
-    
-    st.title("Institution Dashboard Test")
+        st.title("Institution Dashboard Test")
     
     # Create a dummy user for testing
     dummy_user = {
@@ -557,5 +555,6 @@ if __name__ == "__main__":
     
     # Create dashboard
     create_institution_dashboard(analyzer, dummy_user)
+
 
 

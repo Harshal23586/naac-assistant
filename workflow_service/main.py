@@ -65,3 +65,4 @@ def get_pipeline_details(pipeline_id: int, db: Session = Depends(get_db)):
     if not db_pipeline:
         raise HTTPException(status_code=404, detail="Pipeline target not found")
     return db_pipeline
+

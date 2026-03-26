@@ -20,3 +20,4 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
     except Exception as e:
         logger.error(f"OCR Extraction Failed: {e}")
         return ""
+
